@@ -1,5 +1,4 @@
 var fs = require('fs');
-var request = require('request');
 
 var redis = require('redis');
 var async = require('async');
@@ -317,38 +316,6 @@ function SetupForPool(logger, poolOptions, setupFinished){
                 }
             }
         );
-    }
-    
-    function cacheMarketStats() {
-        var marketStatsUpdate = [];
-        var coin = logComponent.replace('_testnet', '').toLowerCase();
-        if (coin == 'zen')
-            coin = 'zencash';
-        
-        request('https://api.coinmarketcap.com/v1/ticker/'+coin+'/', function (error, response, body) {
-            if (error) {
-                logger.error(logSystem, logComponent, 'Error with http request to https://api.coinmarketcap.com/ ' + JSON.stringify(error));
-                return;
-            }
-            if (response && response.statusCode) {
-                if (response.statusCode == 200) {
-                    if (body) {
-                        var data = JSON.parse(body);
-                        if (data.length > 0) {
-                            marketStatsUpdate.push(['hset', logComponent + ':stats', 'coinmarketcap', JSON.stringify(data)]);
-                            redisClient.multi(marketStatsUpdate).exec(function(err, results){
-                                if (err){
-                                    logger.error(logSystem, logComponent, 'Error with redis during call to cacheMarketStats() ' + JSON.stringify(error));
-                                    return;
-                                }
-                            });
-                        }
-                    }
-                } else {
-                    logger.error(logSystem, logComponent, 'Error, unexpected http status code during call to cacheMarketStats() ' + JSON.stringify(response.statusCode));
-                }
-            }
-        });
     }
 
     function cacheNetworkStats () {
